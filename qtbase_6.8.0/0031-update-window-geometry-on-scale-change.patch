@@ -1,0 +1,83 @@
+diff --git a/src/gui/kernel/qwindow.cpp b/src/gui/kernel/qwindow.cpp
+index 51f65e8d24..f140b5c628 100644
+--- a/src/gui/kernel/qwindow.cpp
++++ b/src/gui/kernel/qwindow.cpp
+@@ -236,6 +236,7 @@ void QWindowPrivate::init(QWindow *parent, QScreen *targetScreen)
+ 
+     requestedFormat = QSurfaceFormat::defaultFormat();
+     devicePixelRatio = connectScreen->devicePixelRatio();
++    scaleFactor = QHighDpiScaling::factor(q);
+ 
+     QObject::connect(q, &QWindow::screenChanged, q, [q, this](QScreen *){
+         // We may have changed scaling; trigger resize event if needed,
+@@ -1416,11 +1417,24 @@ bool QWindowPrivate::updateDevicePixelRatio()
+     if (platformWindow)
+         QHighDpiScaling::checkDevicePixelRatioRounding(platformWindow);
+ 
++    const qreal newScaleFactor = QHighDpiScaling::factor(q);
++
+     // If there is no platform window use the associated screen's devicePixelRatio,
+     // which typically is the primary screen and will be correct for single-display
+     // systems (a very common case).
+     const qreal newDevicePixelRatio = platformWindow ?
+-        platformWindow->devicePixelRatio() * QHighDpiScaling::factor(q) : q->screen()->devicePixelRatio();
++        platformWindow->devicePixelRatio() * newScaleFactor : q->screen()->devicePixelRatio();
++
++    if (newScaleFactor != scaleFactor) {
++        scaleFactor = newScaleFactor;
++
++        if (!geometryUpdateTimer.hasExpired()) {
++            if (platformWindow && q->isTopLevel())
++                platformWindow->propagateSizeHints();
++            if (!explicitGeometry.isNull() && !(q->windowStates() & Qt::WindowFullScreen))
++                q->setGeometry(explicitGeometry);
++        }
++    }
+ 
+     if (newDevicePixelRatio == devicePixelRatio)
+         return false;
+@@ -1830,6 +1844,7 @@ void QWindow::setGeometry(const QRect &rect)
+ {
+     Q_D(QWindow);
+     d->positionAutomatic = false;
++    d->explicitGeometry = rect;
+     const QRect oldRect = geometry();
+     if (rect == oldRect)
+         return;
+@@ -2670,9 +2685,12 @@ bool QWindow::event(QEvent *ev)
+         paintEvent(static_cast<QPaintEvent *>(ev));
+         break;
+ 
+-    case QEvent::Show:
++    case QEvent::Show: {
++        Q_D(QWindow);
++        d->geometryUpdateTimer.setRemainingTime(1000);
+         showEvent(static_cast<QShowEvent *>(ev));
+         break;
++    }
+ 
+     case QEvent::Hide:
+         hideEvent(static_cast<QHideEvent *>(ev));
+diff --git a/src/gui/kernel/qwindow_p.h b/src/gui/kernel/qwindow_p.h
+index b3722a6ed8..29f8d4d3da 100644
+--- a/src/gui/kernel/qwindow_p.h
++++ b/src/gui/kernel/qwindow_p.h
+@@ -22,6 +22,7 @@
+ 
+ #include <QtCore/private/qobject_p.h>
+ #include <QtCore/qelapsedtimer.h>
++#include <QtCore/qdeadlinetimer.h>
+ #include <QtCore/qxpfunctional.h>
+ #include <QtGui/qicon.h>
+ #include <QtGui/qpalette.h>
+@@ -122,7 +123,10 @@ public:
+     QString windowFilePath;
+     QIcon windowIcon;
+     QRect geometry;
++    QRect explicitGeometry;
++    QDeadlineTimer geometryUpdateTimer;
+     qreal devicePixelRatio = 1.0;
++    qreal scaleFactor = 1.0;
+     Qt::WindowStates windowState = Qt::WindowNoState;
+     QWindow::Visibility visibility = QWindow::Hidden;
+     bool resizeEventPending = true;
