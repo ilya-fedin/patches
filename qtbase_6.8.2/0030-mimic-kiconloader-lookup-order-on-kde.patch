@@ -1,0 +1,58 @@
+diff --git a/src/gui/image/qiconloader.cpp b/src/gui/image/qiconloader.cpp
+index bc7cafc53c0..4b936d64890 100644
+--- a/src/gui/image/qiconloader.cpp
++++ b/src/gui/image/qiconloader.cpp
+@@ -535,7 +535,7 @@ QThemeIconInfo QIconLoader::findIconHelper(const QString &themeName,
+         }
+     }
+ 
+-    if (info.entries.empty()) {
++    const auto fallbackToParentThemes = [&](DashRule rule) {
+         const QStringList parents = theme.parents();
+         qCDebug(lcIconLoader) << "Did not find matching icons in theme;"
+             << "trying parent themes" << parents
+@@ -547,14 +547,14 @@ QThemeIconInfo QIconLoader::findIconHelper(const QString &themeName,
+             const QString parentTheme = parents.at(i).trimmed();
+ 
+             if (!visited.contains(parentTheme)) // guard against recursion
+-                info = findIconHelper(parentTheme, iconName, visited, QIconLoader::NoFallBack);
++                info = findIconHelper(parentTheme, iconName, visited, rule);
+ 
+             if (!info.entries.empty()) // success
+                 break;
+         }
+-    }
++    };
+ 
+-    if (rule == QIconLoader::FallBack && info.entries.empty()) {
++    const auto dashFallback = [&](DashRule rule) {
+         // If it's possible - find next fallback for the icon
+         const int indexOfDash = iconNameFallback.lastIndexOf(u'-');
+         if (indexOfDash != -1) {
+@@ -562,7 +562,25 @@ QThemeIconInfo QIconLoader::findIconHelper(const QString &themeName,
+                                   << "trying dash fallback";
+             iconNameFallback.truncate(indexOfDash);
+             QStringList _visited;
+-            info = findIconHelper(themeName, iconNameFallback.toString(), _visited, QIconLoader::FallBack);
++            info = findIconHelper(themeName, iconNameFallback.toString(), _visited, rule);
++        }
++    };
++
++    if (qgetenv("XDG_CURRENT_DESKTOP").toUpper().split(':').contains("KDE")) {
++        if (info.entries.empty()) {
++            dashFallback(QIconLoader::NoFallBack);
++        }
++
++        if (rule == QIconLoader::FallBack && info.entries.empty()) {
++            fallbackToParentThemes(QIconLoader::FallBack);
++        }
++    } else {
++        if (info.entries.empty()) {
++            fallbackToParentThemes(QIconLoader::NoFallBack);
++        }
++
++        if (rule == QIconLoader::FallBack && info.entries.empty()) {
++            dashFallback(QIconLoader::FallBack);
+         }
+     }
+ 
