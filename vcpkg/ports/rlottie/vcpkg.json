@@ -1,0 +1,17 @@
+{
+  "name": "rlottie",
+  "version-string": "cbfdcdd2830b4beba53e64e72c11cb0328a720a9",
+  "description": "A platform independent standalone library that plays Lottie Animation.",
+  "homepage": "https://github.com/desktop-app/rlottie",
+  "dependencies": [
+    "rapidjson",
+    {
+      "name": "vcpkg-cmake",
+      "host": true
+    },
+    {
+      "name": "vcpkg-cmake-config",
+      "host": true
+    }
+  ]
+}
