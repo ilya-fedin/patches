@@ -1,0 +1,14 @@
+diff --git a/src/plugins/platforms/windows/qwindowseglcontext.cpp b/src/plugins/platforms/windows/qwindowseglcontext.cpp
+index 4ae087dfa..3a07d511e 100644
+--- a/src/plugins/platforms/windows/qwindowseglcontext.cpp
++++ b/src/plugins/platforms/windows/qwindowseglcontext.cpp
+@@ -46,5 +46,9 @@
+ 
+ #if defined(QT_OPENGL_ES_2_ANGLE) || defined(QT_OPENGL_DYNAMIC) || defined(DESKTOP_APP_QT_STATIC_ANGLE)
+ #  include <EGL/eglext.h>
+ #endif
++
++#if defined(QT_OPENGL_ES_2_ANGLE) || defined(DESKTOP_APP_QT_STATIC_ANGLE)
++#  include <EGL/eglext_angle.h>
++#endif
+ 
