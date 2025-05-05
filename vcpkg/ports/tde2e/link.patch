@@ -1,0 +1,13 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 1699b58b6..52f408915 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1196,7 +1196,7 @@ if (NOT CMAKE_CROSSCOMPILING)
+ endif()
+ 
+ # tdcore - internal TDLib interface
+-if (MSVC AND TD_ENABLE_LTO)
++if (MSVC)
+   add_library(tdcore_part1 STATIC ${TDLIB_SOURCE_PART1})
+   target_include_directories(tdcore_part1 PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}> $<BUILD_INTERFACE:${TL_TD_AUTO_INCLUDE_DIR}>)
+   target_link_libraries(tdcore_part1 PUBLIC tdapi tdnet tddb tdactor tde2e tdutils PRIVATE tdmtproto)
