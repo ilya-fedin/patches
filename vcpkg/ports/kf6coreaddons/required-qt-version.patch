@@ -1,0 +1,52 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index e3f6928b..ee2d0bb4 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -33,7 +33,7 @@ add_feature_info(QCH ${BUILD_QCH} "API documentation in QCH format (for e.g. Qt
+ option(ENABLE_PCH "Enable precompile headers for faster builds" ON)
+ option(KCOREADDONS_USE_QML "Build the QML plugin" ON)
+ 
+-set(REQUIRED_QT_VERSION 6.5.0)
++set(REQUIRED_QT_VERSION)
+ find_package(Qt6 ${REQUIRED_QT_VERSION} CONFIG REQUIRED Core)
+ if (KCOREADDONS_USE_QML)
+     find_package(Qt6 ${REQUIRED_QT_VERSION} CONFIG REQUIRED Qml Network)
+diff --git a/src/lib/kaboutdata.cpp b/src/lib/kaboutdata.cpp
+index b9393105..784087d0 100644
+--- a/src/lib/kaboutdata.cpp
++++ b/src/lib/kaboutdata.cpp
+@@ -392,7 +392,7 @@ KAboutLicense KAboutLicense::byKeyword(const QString &rawKeyword)
+     // Normalize keyword.
+     QString keyword = rawKeyword;
+     keyword = keyword.toLower();
+-    keyword.replace(QLatin1StringView("-or-later"), QLatin1StringView("+"));
++    keyword.replace(QLatin1String("-or-later"), QLatin1String("+"));
+     keyword.remove(QLatin1Char(' '));
+     keyword.remove(QLatin1Char('.'));
+     keyword.remove(QLatin1Char('-'));
+diff --git a/src/lib/text/kstringhandler.cpp b/src/lib/text/kstringhandler.cpp
+index dccbdb7e..eff89412 100644
+--- a/src/lib/text/kstringhandler.cpp
++++ b/src/lib/text/kstringhandler.cpp
+@@ -129,7 +129,7 @@ QStringList KStringHandler::perlSplit(const QRegularExpression &sep, const QStri
+     QRegularExpression separator(sep);
+     separator.setPatternOptions(QRegularExpression::UseUnicodePropertiesOption);
+ 
+-    QRegularExpressionMatchIterator iter = separator.globalMatchView(strView);
++    QRegularExpressionMatchIterator iter = separator.globalMatch(strView);
+     QRegularExpressionMatch match;
+     while (iter.hasNext() && (ignoreMax || list.count() < max - 1)) {
+         match = iter.next();
+diff --git a/src/lib/util/kformatprivate.cpp b/src/lib/util/kformatprivate.cpp
+index a6a685e3..c7942fe7 100644
+--- a/src/lib/util/kformatprivate.cpp
++++ b/src/lib/util/kformatprivate.cpp
+@@ -172,7 +172,7 @@ QString KFormatPrivate::formatByteSize(double size, int precision, KFormat::Bina
+     if (dialect <= KFormat::DefaultBinaryDialect || dialect > KFormat::LastBinaryDialect) {
+         const auto kdeglobals = QStandardPaths::locate(QStandardPaths::GenericConfigLocation, QStringLiteral("kdeglobals"));
+         QSettings settings(kdeglobals, QSettings::IniFormat);
+-        dialect = static_cast<KFormat::BinaryUnitDialect>(settings.value("Locale/BinaryUnitDialect", fallbackDialect).toInt());
++        dialect = static_cast<KFormat::BinaryUnitDialect>(settings.value(QStringLiteral("Locale/BinaryUnitDialect"), fallbackDialect).toInt());
+     }
+ 
+     // Current KDE default is to auto-adjust so the size falls in the range 0 to 1000/1024
