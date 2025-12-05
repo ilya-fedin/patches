@@ -1,0 +1,7 @@
+{
+    "name": "libjpeg-turbo",
+    "version-string": "",
+    "dependencies": [
+        "mozjpeg"
+    ]
+}
